@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Simulateur de coûts{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f7f0;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+    }
+
+    h1, h2 {
+        color: #4CAF50;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    form {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 20px;
+    }
+
+    .form-group {
+        flex: 1 1 calc(33.333% - 1rem);
+        min-width: 250px;
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #4CAF50;
+    }
+
+    input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+
+    .form-actions {
+        width: 100%;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        margin: 0 10px;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    }
+
+    .btn-reset {
+        background-color: #f44336;
+    }
+
+    .btn-reset:hover {
+        background-color: #d32f2f;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        margin-top: 20px;
+    }
+
+    th, td {
+        padding: 15px;
+        text-align: left;
+        background-color: #f9f9f9;
+    }
+
+    th {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+    }
+
+    tr:hover td {
+        background-color: #f0f0f0;
+        transition: background-color 0.3s ease;
+    }
+
+    .message {
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .message-red {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .message-green {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .export-buttons {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .export-btn {
+        background-color: #2196F3;
+        margin: 0 10px;
+    }
+
+    .export-btn:hover {
+        background-color: #1976D2;
+    }
+
+    #exportContainer {
+        background-color: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div id="exportContainer">
+        <h1>Simulateur de calcul des coûts au KG</h1>
+        <form method="POST" id="costForm">
+            <div class="form-group">
+                <label for="emb_kg">Emballage au KG:</label>
+                <input type="number" step="0.01" name="emb_kg" id="emb_kg" value="{{ result.input_data.emb_kg if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="MO_kg">MO au KG:</label>
+                <input type="number" step="0.01" name="MO_kg" id="MO_kg" value="{{ result.input_data.MO_kg if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="Transport_kg">Transport au KG:</label>
+                <input type="number" step="0.01" name="Transport_kg" id="Transport_kg" value="{{ result.input_data.Transport_kg if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="Douane_kg">Douane au KG:</label>
+                <input type="number" step="0.01" name="Douane_kg" id="Douane_kg" value="{{ result.input_data.Douane_kg if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="autre_kg">Autre coût au KG:</label>
+                <input type="number" step="0.01" name="autre_kg" id="autre_kg" value="{{ result.input_data.autre_kg if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="production_kg">Production au KG:</label>
+                <input type="number" step="0.01" name="production_kg" id="production_kg" value="{{ result.input_data.production_kg if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="prix_vente">PV proposé par le client (KG):</label>
+                <input type="number" step="0.01" name="prix_vente" id="prix_vente" value="{{ result.input_data.prix_vente if result and result.input_data else '' }}" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn">Calculer</button>
+                <button type="button" class="btn btn-reset" onclick="resetForm()">Réinitialiser</button>
+            </div>
+        </form>
+
+        <div id="resultContainer">
+            {% if result %}
+                {% if result.error %}
+                    <p class="message message-red">{{ result.error }}</p>
+                {% else %}
+                    <h2>Résultats:</h2>
+                    <table>
+                        <tr>
+                            <th>Paramètre</th>
+                            <th>Valeur</th>
+                        </tr>
+                        <tr>
+                            <td>PV proposé par client</td>
+                            <td>{{ result.input_data.prix_vente|round(2) }} MAD</td>
+                        </tr>
+                        <tr>
+                            <td>Production ferme au KG</td>
+                            <td>{{ result.input_data.production_kg|round(2) }} MAD</td>
+                        </tr>
+                        <tr>
+                            <td>Coût Total au KG</td>
+                            <td>{{ result.Cou_kg_total|round(2) }} MAD</td>
+                        </tr>
+                        <tr>
+                            <td>Coût total sans production au KG</td>
+                            <td>{{ result.Cou_kg_sansprod|round(2) }} MAD</td>
+                        </tr>
+                        <tr>
+                            <td>Marge par rapport à la production</td>
+                            <td>{{ result.marge_prod|round(2) }} MAD</td>
+                        </tr>
+                    </table>
+
+                    {% if result.message %}
+                        <p class="message {{ 'message-green' if result.marge_prod > 0 else 'message-red' }}">{{ result.message }}</p>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="export-buttons">
+        <button class="btn export-btn" onclick="exportToImage()">Exporter en JPG</button>
+        <button class="btn export-btn" onclick="exportToPDF()">Exporter en PDF</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    function resetForm() {
+        document.getElementById("costForm").reset();
+        const inputs = document.querySelectorAll("#costForm input[type='number']");
+        inputs.forEach(input => input.value = '');
+        document.getElementById("resultContainer").innerHTML = '';
+    }
+
+    function exportToImage() {
+        html2canvas(document.querySelector("#exportContainer")).then(canvas => {
+            var link = document.createElement('a');
+            link.download = 'cout_simulator_results.jpg';
+            link.href = canvas.toDataURL("image/jpeg");
+            link.click();
+        });
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        html2canvas(document.querySelector("#exportContainer")).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            doc.save('cout_simulator_results.pdf');
+        });
+    }
+</script>
+{% endblock %}

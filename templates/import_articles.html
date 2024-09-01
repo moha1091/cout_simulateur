@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Importer des Articles{% endblock %}
+
+{% block extra_css %}
+<style>
+    form {
+        margin-top: 20px;
+    }
+    .instructions {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+    }
+    .flash-messages {
+        list-style-type: none;
+        padding: 0;
+    }
+    .flash-messages li {
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Importer des Articles</h1>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="flash-messages">
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+<form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv">
+    <button type="submit">Importer</button>
+</form>
+
+<div class="instructions">
+    <h2>Instructions</h2>
+    <p>Veuillez télécharger un fichier CSV avec les colonnes suivantes :</p>
+    <ul>
+        <li>code</li>
+        <li>name</li>
+        <li>family</li>
+        <li>unit</li>
+        <li>price</li>
+    </ul>
+    <p>Assurez-vous que les noms des colonnes correspondent exactement à ceux indiqués ci-dessus.</p>
+</div>
+{% endblock %}

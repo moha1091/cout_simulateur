@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Produits Finis{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f7f0;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+    }
+
+    h1, h2 {
+        color: #4CAF50;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .search-form {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .search-form input[type="text"] {
+        padding: 10px;
+        width: 300px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+
+    .search-form button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+
+    .search-form button:hover {
+        background-color: #45a049;
+    }
+
+    .product-details {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .product-details h2 {
+        margin-top: 0;
+        color: #4CAF50;
+        border-bottom: 2px solid #4CAF50;
+        padding-bottom: 10px;
+    }
+
+    .product-details p {
+        margin: 10px 0;
+    }
+
+    .article-list {
+        display: none;
+        margin-top: 20px;
+    }
+
+    .article-list table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .article-list th, .article-list td {
+        padding: 15px;
+        text-align: left;
+        background-color: #f0f0f0;
+    }
+
+    .article-list th {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+    }
+
+    .btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        margin: 5px;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    }
+
+    .delete-btn {
+        background-color: #f44336;
+    }
+
+    .delete-btn:hover {
+        background-color: #d32f2f;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Produits Finis</h1>
+
+    <div class="search-form">
+        <form method="GET">
+            <input type="text" name="search" placeholder="Rechercher un produit fini" value="{{ search }}">
+            <button type="submit" class="btn">Rechercher</button>
+        </form>
+    </div>
+
+    {% for product in products %}
+    <div class="product-details" id="product-{{ product.id }}">
+        <h2>{{ product.name }} ({{ product.code }})</h2>
+        <p><strong>Client:</strong> {{ product.client }}</p>
+        <p><strong>Montant total:</strong> {{ product.total_amount }} Dhs</p>
+        <p><strong>Poids de la palette:</strong> {{ product.pallet_weight }} kg</p>
+        <p><strong>Coût d'emballage par kg:</strong> {{ product.packaging_cost_per_kg }} Dhs/kg</p>
+        <p><strong>Date de création:</strong> {{ product.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</p>
+
+        <button class="btn" onclick="toggleArticles('articles-{{ product.id }}')">Afficher/Masquer les articles</button>
+        <button class="btn delete-btn" onclick="deleteProduct({{ product.id }})">Supprimer</button>
+
+        <div id="articles-{{ product.id }}" class="article-list">
+            <h3>Articles:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Quantité</th>
+                        <th>Unité</th>
+                        <th>Prix</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for article in product.articles %}
+                    <tr>
+                        <td>{{ article.article_name }}</td>
+                        <td>{{ article.quantity }}</td>
+                        <td>{{ article.unit }}</td>
+                        <td>{{ article.price }} Dhs</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleArticles(id) {
+        var articleList = document.getElementById(id);
+        if (articleList.style.display === "none" || articleList.style.display === "") {
+            articleList.style.display = "block";
+        } else {
+            articleList.style.display = "none";
+        }
+    }
+
+    function deleteProduct(productId) {
+        if (confirm("Êtes-vous sûr de vouloir supprimer ce produit ?")) {
+            fetch(`/delete_final_product/${productId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`product-${productId}`).remove();
+                        alert("Produit supprimé avec succès");
+                    } else {
+                        alert("Erreur lors de la suppression du produit");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Une erreur s'est produite lors de la suppression");
+                });
+        }
+    }
+</script>
+{% endblock %}

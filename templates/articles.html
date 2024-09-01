@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Gestion des Articles{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f7f0;
+        color: #333;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+    }
+
+    h1, h2 {
+        color: #4CAF50;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .import-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 25px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .import-btn:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    }
+
+    .search-filter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    #searchInput, #filterSelect {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        font-size: 1rem;
+    }
+
+    #searchInput {
+        width: 60%;
+        margin-right: 1rem;
+    }
+
+    #filterSelect {
+        width: 35%;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    th {
+        background-color: #4CAF50;
+        color: white;
+        padding: 15px;
+        text-align: left;
+        border-radius: 8px 8px 0 0;
+    }
+
+    td {
+        background-color: #f9f9f9;
+        padding: 15px;
+    }
+
+    tr:hover td {
+        background-color: #f0f0f0;
+        transition: background-color 0.3s ease;
+    }
+
+    input[type="text"], input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .action-cell {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .btn-modify {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .btn-delete {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .add-form {
+        background-color: #f9f9f9;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .add-form input {
+        margin-bottom: 1rem;
+    }
+
+    .add-form button {
+        width: 100%;
+        padding: 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .add-form button:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Gestion des Articles</h1>
+
+    <div class="action-buttons">
+        <h2>Ajouter un nouvel article</h2>
+        <a href="{{ url_for('import_articles') }}" class="import-btn">Importer des Articles</a>
+    </div>
+
+    <form method="POST" class="add-form">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="code" placeholder="Code article" required>
+        <input type="text" name="name" placeholder="Nom de l'article" required>
+        <input type="text" name="family" placeholder="Famille d'article">
+        <input type="text" name="unit" placeholder="Unité">
+        <input type="number" step="0.01" name="price" placeholder="Prix unitaire" required>
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <h2>Liste des articles</h2>
+    <div class="search-filter">
+        <input type="text" id="searchInput" placeholder="Rechercher un article...">
+        <select id="filterSelect">
+            <option value="all">Tous les champs</option>
+            <option value="code">Code</option>
+            <option value="name">Nom</option>
+            <option value="family">Famille</option>
+            <option value="unit">Unité</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table id="articlesTable">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Nom</th>
+                    <th>Famille</th>
+                    <th>Unité</th>
+                    <th>Prix unitaire</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="id" value="{{ article.id }}">
+                        <td><input type="text" name="code" value="{{ article.code }}" required></td>
+                        <td><input type="text" name="name" value="{{ article.name }}" required></td>
+                        <td><input type="text" name="family" value="{{ article.family }}"></td>
+                        <td><input type="text" name="unit" value="{{ article.unit }}"></td>
+                        <td><input type="number" step="0.01" name="price" value="{{ article.price }}" required></td>
+                        <td class="action-cell">
+                            <button type="submit" class="btn btn-modify">Modifier</button>
+                    </form>
+                    <form method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet article?');">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="{{ article.id }}">
+                        <button type="submit" class="btn btn-delete">Supprimer</button>
+                    </form>
+                        </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const filterSelect = document.getElementById('filterSelect');
+    const table = document.getElementById('articlesTable');
+    const rows = table.getElementsByTagName('tr');
+
+    function filterTable() {
+        const filter = searchInput.value.toUpperCase();
+        const filterBy = filterSelect.value;
+
+        for (let i = 1; i < rows.length; i++) {
+            let showRow = false;
+            const cells = rows[i].getElementsByTagName('td');
+
+            for (let j = 0; j < cells.length - 1; j++) {
+                const input = cells[j].getElementsByTagName('input')[0];
+                const cellValue = input.value.toUpperCase();
+
+                if (filterBy === 'all' || filterSelect.options[j+1].value === filterBy) {
+                    if (cellValue.indexOf(filter) > -1) {
+                        showRow = true;
+                        break;
+                    }
+                }
+            }
+
+            rows[i].style.display = showRow ? '' : 'none';
+        }
+    }
+
+    searchInput.addEventListener('keyup', filterTable);
+    filterSelect.addEventListener('change', filterTable);
+</script>
+{% endblock %}

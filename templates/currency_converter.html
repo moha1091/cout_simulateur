@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Convertisseur de devise{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f7f0;
+        color: #333;
+        line-height: 1.6;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+    }
+
+    h1, h2 {
+        color: #4CAF50;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #4CAF50;
+    }
+
+    input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+
+    .btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+        align-self: center;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .result h2 {
+        color: #4CAF50;
+        margin-top: 0;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #4CAF50;
+    }
+
+    .result p {
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Convertisseur de devise</h1>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="amount">Montant à convertir :</label>
+            <input type="number" step="0.01" name="amount" id="amount" required>
+        </div>
+
+        <div class="form-group">
+            <label for="rate">Taux de change :</label>
+            <input type="number" step="0.0001" name="rate" id="rate" required>
+        </div>
+
+        <button type="submit" class="btn">Convertir</button>
+    </form>
+
+    {% if conversion_result is not none %}
+    <div class="result">
+        <h2>Résultat de la conversion</h2>
+        <p>{{ conversion_result }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

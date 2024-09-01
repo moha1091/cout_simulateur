@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Siempre Verde{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .logo {
+            width: 200px;
+            margin-bottom: 20px;
+        }
+        nav {
+            background-color: #4CAF50;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Siempre Verde" class="logo">
+    <nav>
+        <a href="/">Accueil</a>
+        <a href="/articles">Gestion des Articles</a>
+        <a href="/packaging_simulator">Simulateur d'Emballage</a>
+        <a href="/final_products">Produits Finis</a>
+        <a href="/cost_simulator">Simulateur de coûts</a>
+        <a href="/converter">Convertisseur de devise</a>
+
+    </nav>
+
+    {% block content %}
+    {% endblock %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
