@@ -5,10 +5,6 @@ from io import TextIOWrapper
 import csv
 from datetime import datetime
 from config import Config
-import pandas as pd
-import json
-import logging
-
 
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(Config)
