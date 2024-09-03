@@ -1,18 +1,16 @@
 {
-  "functions": {
-    "api/*.py": {
-      "maxDuration": 10
-    }
-  },
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.py" }
-  ],
-  "buildCommand": "pip install -r requirements.txt",
-  "outputDirectory": "api",
+  "version": 2,
   "builds": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+      "src": "wsgi.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb", "buildCommand": "bash build.sh" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "wsgi.py"
     }
   ]
 }
