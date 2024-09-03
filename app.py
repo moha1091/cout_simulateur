@@ -5,6 +5,9 @@ from io import TextIOWrapper
 import csv
 from datetime import datetime
 from config import Config
+import pandas as pd
+import json
+import logging
 
 
 app = Flask(__name__, static_url_path='/static')
@@ -262,6 +265,137 @@ def final_products():
     ).all()
     return render_template('final_products.html', products=products, search=search)
 
+
+import pandas as pd
+import json
+from flask import flash, redirect, url_for, request, render_template
+import logging
+
+
+@app.route('/import_final_products', methods=['GET', 'POST'])
+def import_final_products():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'error')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file', 'error')
+            return redirect(request.url)
+        if file and file.filename.endswith('.xlsx'):
+            try:
+                df = pd.read_excel(file, engine='openpyxl')
+
+                # Print out the columns that were actually read
+                print(f"Columns in the Excel file: {df.columns.tolist()}")
+                logging.info(f"Columns in the Excel file: {df.columns.tolist()}")
+
+                required_columns = ['code', 'name', 'client', 'total_amount', 'pallet_weight', 'packaging_cost_per_kg',
+                                    'articles']
+
+                # Check if all required columns are present
+                missing_columns = [col for col in required_columns if col not in df.columns]
+                if missing_columns:
+                    flash(f"Missing columns in Excel file: {', '.join(missing_columns)}", 'error')
+                    return redirect(request.url)
+
+                # If we get here, all required columns are present
+                flash('File uploaded successfully. Processing data...', 'info')
+
+                for _, row in df.iterrows():
+                    try:
+                        articles = json.loads(row['articles'])
+
+                        final_product = FinalProduct(
+                            code=row['code'],
+                            name=row['name'],
+                            client=row['client'],
+                            total_amount=float(row['total_amount']),
+                            pallet_weight=float(row['pallet_weight']),
+                            packaging_cost_per_kg=float(row['packaging_cost_per_kg'])
+                        )
+                        db.session.add(final_product)
+                        db.session.flush()
+
+                        for article in articles:
+                            final_product_article = FinalProductArticle(
+                                final_product_id=final_product.id,
+                                article_name=article['name'],
+                                quantity=float(article['quantity']),
+                                unit=article['unit'],
+                                price=float(article['price'])
+                            )
+                            db.session.add(final_product_article)
+
+                    except json.JSONDecodeError:
+                        flash(f"Invalid JSON in 'articles' column for row with code {row['code']}", 'error')
+                    except KeyError as e:
+                        flash(f"Missing key in row data: {str(e)}", 'error')
+                    except ValueError as e:
+                        flash(f"Invalid value in row data: {str(e)}", 'error')
+
+                db.session.commit()
+                flash('Final products imported successfully', 'success')
+                return redirect(url_for('final_products'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error importing final products: {str(e)}', 'error')
+                logging.error(f'Error importing final products: {str(e)}', exc_info=True)
+                return redirect(request.url)
+        else:
+            flash('Invalid file type. Please upload an Excel file (.xlsx)', 'error')
+            return redirect(request.url)
+    return render_template('import_final_products.html')
+
+@app.route('/edit_final_product/<int:product_id>', methods=['GET', 'POST'])
+def edit_final_product(product_id):
+    product = FinalProduct.query.get_or_404(product_id)
+    all_articles = Article.query.all()
+
+    if request.method == 'POST':
+        try:
+            product.name = request.form['name']
+            product.client = request.form['client']
+            product.total_amount = float(request.form['total_amount'])
+            product.pallet_weight = float(request.form['pallet_weight'])
+            product.packaging_cost_per_kg = float(request.form['packaging_cost_per_kg'])
+
+            # Update existing articles
+            for article in product.articles:
+                article_id = str(article.id)
+                if f'quantity_{article_id}' in request.form:
+                    article.quantity = float(request.form[f'quantity_{article_id}'])
+                    article.price = float(request.form[f'price_{article_id}'])
+                else:
+                    db.session.delete(article)
+
+            # Add new articles
+            new_article_ids = request.form.getlist('new_article_name[]')
+            new_article_quantities = request.form.getlist('new_article_quantity[]')
+
+            for article_id, quantity in zip(new_article_ids, new_article_quantities):
+                if article_id and quantity:
+                    article = Article.query.get(int(article_id))
+                    new_article = FinalProductArticle(
+                        final_product_id=product.id,
+                        article_name=article.name,
+                        quantity=float(quantity),
+                        unit=article.unit,
+                        price=article.price
+                    )
+                    db.session.add(new_article)
+
+            db.session.commit()
+            flash('Final product updated successfully')
+            return redirect(url_for('final_products'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating final product: {str(e)}')
+
+    return render_template('edit_final_product.html', product=product,
+                           all_articles=[{'id': a.id, 'name': a.name, 'unit': a.unit, 'price': a.price} for a in
+                                         all_articles])
+
 @app.route('/delete_final_product/<int:product_id>', methods=['POST'])
 def delete_final_product(product_id):
     product = FinalProduct.query.get_or_404(product_id)
@@ -277,6 +411,7 @@ def delete_final_product(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
+
 
 if __name__ == '__main__':
     with app.app_context():

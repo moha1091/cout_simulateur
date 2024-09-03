@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Modifier Produit Fini{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f7f0;
+        color: #333;
+        line-height: 1.6;
+    }
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+    }
+    h1, h2 {
+        color: #4CAF50;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #4CAF50;
+    }
+    input[type="text"], input[type="number"], select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    .btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+        background-color: #45a049;
+    }
+    .btn-danger {
+        background-color: #f44336;
+    }
+    .btn-danger:hover {
+        background-color: #d32f2f;
+    }
+    .article-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    .article-table th, .article-table td {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+    .article-table th {
+        background-color: #4CAF50;
+        color: white;
+    }
+    .article-form {
+        background-color: #f9f9f9;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Modifier Produit Fini: {{ product.name }}</h1>
+
+    <form method="POST" id="editProductForm">
+        <div class="form-group">
+            <label for="name">Nom:</label>
+            <input type="text" id="name" name="name" value="{{ product.name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="client">Client:</label>
+            <input type="text" id="client" name="client" value="{{ product.client }}" required>
+        </div>
+        <div class="form-group">
+            <label for="total_amount">Montant total:</label>
+            <input type="number" id="total_amount" name="total_amount" value="{{ product.total_amount }}" step="0.01" required readonly>
+        </div>
+        <div class="form-group">
+            <label for="pallet_weight">Poids de la palette:</label>
+            <input type="number" id="pallet_weight" name="pallet_weight" value="{{ product.pallet_weight }}" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="packaging_cost_per_kg">Coût d'emballage par kg:</label>
+            <input type="number" id="packaging_cost_per_kg" name="packaging_cost_per_kg" value="{{ product.packaging_cost_per_kg }}" step="0.0001" required readonly>
+        </div>
+
+        <h2>Articles</h2>
+        <table class="article-table">
+            <thead>
+                <tr>
+                    <th>Nom de l'article</th>
+                    <th>Quantité</th>
+                    <th>Unité</th>
+                    <th>Prix</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="articleTableBody">
+                {% for article in product.articles %}
+                <tr>
+                    <td>{{ article.article_name }}</td>
+                    <td><input type="number" name="quantity_{{ article.id }}" value="{{ article.quantity }}" step="0.01" required class="article-quantity"></td>
+                    <td>{{ article.unit }}</td>
+                    <td><input type="number" name="price_{{ article.id }}" value="{{ article.price }}" step="0.01" required class="article-price"></td>
+                    <td><button type="button" class="btn btn-danger" onclick="removeArticleRow(this)">Supprimer</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="article-form">
+            <h3>Ajouter un nouvel article</h3>
+            <div class="form-group">
+                <label for="new_article">Sélectionner un article:</label>
+                <select id="new_article" onchange="updateNewArticleDetails()">
+                    <option value="">Sélectionnez un article</option>
+                    {% for article in all_articles %}
+                    <option value="{{ article.id }}" data-unit="{{ article.unit }}" data-price="{{ article.price }}">{{ article.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="new_quantity">Quantité:</label>
+                <input type="number" id="new_quantity" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="new_unit">Unité:</label>
+                <input type="text" id="new_unit" readonly>
+            </div>
+            <div class="form-group">
+                <label for="new_price">Prix:</label>
+                <input type="number" id="new_price" step="0.01" readonly>
+            </div>
+            <button type="button" class="btn" onclick="addNewArticleRow()">Ajouter l'article</button>
+        </div>
+
+        <button type="submit" class="btn">Enregistrer les modifications</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateNewArticleDetails() {
+        const select = document.getElementById('new_article');
+        const selectedOption = select.options[select.selectedIndex];
+        document.getElementById('new_unit').value = selectedOption.dataset.unit || '';
+        document.getElementById('new_price').value = selectedOption.dataset.price || '';
+    }
+
+    function addNewArticleRow() {
+        const select = document.getElementById('new_article');
+        const articleName = select.options[select.selectedIndex].text;
+        const articleId = select.value;
+        const quantity = document.getElementById('new_quantity').value;
+        const unit = document.getElementById('new_unit').value;
+        const price = document.getElementById('new_price').value;
+
+        if (!articleId || !quantity) {
+            alert('Veuillez sélectionner un article et spécifier une quantité.');
+            return;
+        }
+
+        const newRow = `
+            <tr>
+                <td>${articleName}<input type="hidden" name="new_article_name[]" value="${articleId}"></td>
+                <td><input type="number" name="new_article_quantity[]" value="${quantity}" step="0.01" required class="article-quantity"></td>
+                <td>${unit}<input type="hidden" name="new_article_unit[]" value="${unit}"></td>
+                <td><input type="number" name="new_article_price[]" value="${price}" step="0.01" required class="article-price"></td>
+                <td><button type="button" class="btn btn-danger" onclick="removeArticleRow(this)">Supprimer</button></td>
+            </tr>
+        `;
+
+        document.getElementById('articleTableBody').insertAdjacentHTML('beforeend', newRow);
+        recalculatePackagingCost();
+
+        // Reset the form
+        select.value = '';
+        document.getElementById('new_quantity').value = '';
+        document.getElementById('new_unit').value = '';
+        document.getElementById('new_price').value = '';
+    }
+
+    function removeArticleRow(button) {
+        button.closest('tr').remove();
+        recalculatePackagingCost();
+    }
+
+    function recalculatePackagingCost() {
+        let totalAmount = 0;
+        const rows = document.getElementById('articleTableBody').rows;
+        for (let i = 0; i < rows.length; i++) {
+            const quantity = parseFloat(rows[i].querySelector('.article-quantity').value || 0);
+            const price = parseFloat(rows[i].querySelector('.article-price').value || 0);
+            totalAmount += quantity * price;
+        }
+        const palletWeight = parseFloat(document.getElementById('pallet_weight').value || 0);
+        const packagingCostPerKg = palletWeight > 0 ? totalAmount / palletWeight : 0;
+        document.getElementById('packaging_cost_per_kg').value = packagingCostPerKg.toFixed(4);
+        document.getElementById('total_amount').value = totalAmount.toFixed(2);
+    }
+
+    // Add event listeners
+    document.getElementById('pallet_weight').addEventListener('input', recalculatePackagingCost);
+    document.getElementById('articleTableBody').addEventListener('input', recalculatePackagingCost);
+
+    // Initial calculation
+    recalculatePackagingCost();
+</script>
+{% endblock %}

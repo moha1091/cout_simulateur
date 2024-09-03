@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Siempre Verde - Importer Produits Finis{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #f0f7f0;
+        color: #333;
+        line-height: 1.6;
+    }
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.1);
+        border-radius: 12px;
+    }
+    h1, h2 {
+        color: #4CAF50;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #4CAF50;
+    }
+    .form-control-file {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .btn-primary {
+        background-color: #4CAF50;
+        border-color: #4CAF50;
+        color: white;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: #45a049;
+    }
+    .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: 0.25rem;
+    }
+    .alert-success {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+    ul {
+        padding-left: 1.5rem;
+    }
+    pre {
+        background-color: #f8f9fa;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 1rem;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Importer Produits Finis</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Choisir un fichier Excel:</label>
+            <input type="file" class="form-control-file" id="file" name="file" accept=".xlsx" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Importer</button>
+    </form>
+
+    <div class="mt-4">
+        <h2>Instructions</h2>
+        <ul>
+            <li>Le fichier doit être au format Excel (.xlsx)</li>
+            <li>Assurez-vous que votre fichier contient les colonnes suivantes :
+                <ul>
+                    <li>code</li>
+                    <li>name</li>
+                    <li>client</li>
+                    <li>total_amount</li>
+                    <li>pallet_weight</li>
+                    <li>packaging_cost_per_kg</li>
+                    <li>articles (sous forme de liste de dictionnaires JSON)</li>
+                </ul>
+            </li>
+            <li>La colonne 'articles' doit contenir une liste de dictionnaires au format JSON, avec chaque dictionnaire représentant un article et contenant les clés : 'name', 'quantity', 'unit', et 'price'</li>
+            <li>Exemple de format JSON pour la colonne 'articles':
+                <pre>[{"name": "Article 1", "quantity": 10, "unit": "kg", "price": 5.5}, {"name": "Article 2", "quantity": 20, "unit": "pcs", "price": 2.75}]</pre>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
